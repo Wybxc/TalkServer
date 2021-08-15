@@ -23,3 +23,7 @@ uvicorn main:app --host 127.0.0.1 --port 6000
 | ------ | ---------------------------------- |
 | result | 聊天机器人的回复                   |
 | score  | 回复的分数（基本没有什么参考价值） |
+
+## 在线试用
+
+可以在 https://api.wybxc.cc/talkserver/?msg=你好 体验 TalkServer。
