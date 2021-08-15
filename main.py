@@ -7,7 +7,6 @@ from fastapi.params import Depends
 
 import torch
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
 
 from beam_search import get_response
 from network import AttnDecoderRNN, EncoderRNN, device
@@ -23,14 +22,6 @@ decoder = AttnDecoderRNN(256, str_preprocessor.n_word).to(device)
 decoder.load_state_dict(torch.load('decoder.state', map_location=device))
 
 app = FastAPI()
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=['*'],
-    allow_credentials=True,
-    allow_methods=['GET'],
-    allow_headers=["*"],
-)
 
 
 class Limiter():
@@ -52,8 +43,8 @@ class Limiter():
             self.clean()
             await asyncio.sleep(120)
 
-    async def __call__(self, request: Request):        
-        client_host = request.client.host        
+    async def __call__(self, request: Request):
+        client_host = request.client.host
         if client_host in self.whitelist:
             return
 
@@ -66,13 +57,14 @@ class Limiter():
 
         if not self._clean_timer:
             self._clean_timer = asyncio.create_task(self.clean_timer())
-    
+
     def __del__(self):
         if self._clean_timer:
             self._clean_timer.cancel()
 
 
-@app.get('/', dependencies=[Depends(Limiter(whitelist=['localhost', '127.0.0.1']))])
+@app.get('/',
+         dependencies=[Depends(Limiter(whitelist=['localhost', '127.0.0.1']))])
 def get_message(msg: str, request: Request):
     msg = msg[:990]
     if msg == '':
@@ -91,6 +83,6 @@ def get_message(msg: str, request: Request):
     while result[-1] == result[-2] and result[-1] == result[-3] and len(
             result) >= 3:
         result = result[:-1]
-    client_host = request.client.host 
-    print(f'[{client_host}] {msg} -> {result}')    
+    client_host = request.client.host
+    print(f'[{client_host}] {msg} -> {result}')
     return {'result': result, 'score': score}
